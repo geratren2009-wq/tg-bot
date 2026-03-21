@@ -18,7 +18,9 @@ from aiogram.enums import ParseMode
 # ============================================================
 # НАСТРОЙКИ
 # ============================================================
-BOT_TOKEN = "8435777682:AAESaC5frCxhbIECaSBPEMUQhzn7LYXCULo"
+import os
+
+BOT_TOKEN = os.getenv("BOT_TOKEN")
 TARGET_CHAT_ID = ""
 CHECK_EVERY_MINUTES = 20
 MAX_NEW_PER_STORE = 5
