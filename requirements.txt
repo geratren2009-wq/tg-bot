@@ -1,0 +1,4 @@
+aiogram
+aiohttp
+beautifulsoup4
+lxml
