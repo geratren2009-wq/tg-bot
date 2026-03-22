@@ -18,6 +18,7 @@ from aiogram.filters import Command, CommandStart
 from aiogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup, Message
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
+ADMIN_ID = 939148059
 TARGET_CHAT_ID = ""
 CHECK_EVERY_MINUTES = 20
 MAX_NEW_PER_STORE = 5
@@ -50,6 +51,10 @@ class Deal:
 
 
 DEALS_CACHE: Dict[str, Deal] = {}
+
+
+def is_admin(user_id: int | None) -> bool:
+    return user_id == ADMIN_ID
 
 
 def init_db() -> None:
@@ -307,18 +312,23 @@ async def start_handler(message: Message):
     text = (
         "Привіт! 🇺🇦\n\n"
         "Я шукаю нові акції в EVA, PROSTOR і ROZETKA.\n"
-        f"Автоперевірка: кожні <b>{CHECK_EVERY_MINUTES}</b> хв.\n\n"
-        "Команди:\n"
-        "/check — перевірити все зараз\n"
-        "/setchat — зробити цей чат ціллю для автопостингу\n"
-        "/status — показати статус\n"
-        "/stats — статистика кліків\n"
+        f"Автоперевірка: кожні <b>{CHECK_EVERY_MINUTES}</b> хв."
     )
+    if is_admin(message.from_user.id if message.from_user else None):
+        text += (
+            "\n\nКоманди адміністратора:\n"
+            "/check — перевірити все зараз\n"
+            "/setchat — зробити цей чат ціллю для автопостингу\n"
+            "/status — показати статус\n"
+            "/stats — статистика кліків"
+        )
     await message.answer(text, reply_markup=main_menu())
 
 
 @dp.message(Command("setchat"))
 async def setchat_handler(message: Message):
+    if not is_admin(message.from_user.id if message.from_user else None):
+        return
     global TARGET_CHAT_ID
     TARGET_CHAT_ID = str(message.chat.id)
     await message.answer(f"✅ Тепер нові акції будуть надсилатися сюди:\n<code>{TARGET_CHAT_ID}</code>")
@@ -326,6 +336,8 @@ async def setchat_handler(message: Message):
 
 @dp.message(Command("status"))
 async def status_handler(message: Message):
+    if not is_admin(message.from_user.id if message.from_user else None):
+        return
     mode = "звичайні посилання"
     if any(v.strip() for v in STORE_AFFILIATE_TEMPLATES.values()) or GLOBAL_REDIRECT.strip():
         mode = "партнерські / редирект-посилання"
@@ -341,6 +353,8 @@ async def status_handler(message: Message):
 
 @dp.message(Command("stats"))
 async def stats_handler(message: Message):
+    if not is_admin(message.from_user.id if message.from_user else None):
+        return
     rows = get_stats(10)
     total = get_total_clicks()
     if not rows:
@@ -354,6 +368,8 @@ async def stats_handler(message: Message):
 
 @dp.message(Command("check"))
 async def manual_check_handler(message: Message):
+    if not is_admin(message.from_user.id if message.from_user else None):
+        return
     await message.answer("⏳ Перевіряю нові акції...")
     summary = await check_new_deals_and_send(chat_id=message.chat.id, send_only_new=False)
     await message.answer(summary)
@@ -379,6 +395,9 @@ async def store_callback(callback: CallbackQuery):
 
 @dp.callback_query(F.data == "check:all")
 async def check_all_callback(callback: CallbackQuery):
+    if not is_admin(callback.from_user.id if callback.from_user else None):
+        await callback.answer("Недоступно", show_alert=False)
+        return
     await callback.answer("Перевіряю...")
     summary = await check_new_deals_and_send(chat_id=callback.message.chat.id, send_only_new=False)
     await callback.message.answer(summary)
@@ -395,13 +414,8 @@ async def go_callback(callback: CallbackQuery):
     username = callback.from_user.username if callback.from_user else None
     final_url = build_affiliate_url(deal.store_key, deal.url, user_id=user_id)
     save_click(user_id, username, deal_id, deal, final_url)
-    await callback.answer("Клік зараховано ✅")
-    text = (
-        f"🧾 <b>Перехід зараховано</b>\n\n"
-        f"<b>{deal.store_name}</b>\n{deal.title}\n\n"
-        f"Натисни кнопку нижче, щоб відкрити акцію."
-    )
-    await callback.message.answer(text, reply_markup=final_open_keyboard(final_url))
+    await callback.answer()
+    await callback.message.answer("Відкрий акцію нижче 👇", reply_markup=final_open_keyboard(final_url))
 
 
 async def check_new_deals_and_send(chat_id=None, send_only_new=True) -> str:
