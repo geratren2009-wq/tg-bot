@@ -174,12 +174,29 @@ def build_affiliate_url(store_key: str, raw_url: str, user_id: int | None = None
     return final_url
 
 
-def deal_keyboard(deal: Deal, user_id: int | None = None) -> InlineKeyboardMarkup:
+def deal_keyboard(deal: Deal, user_id: int | None = None):
     final_url = build_affiliate_url(deal.store_key, deal.url, user_id=user_id)
+
     return InlineKeyboardMarkup(
         inline_keyboard=[
-            [InlineKeyboardButton(text="🛒 Перейти до акції", url=final_url)],
-            [InlineKeyboardButton(text="🔐 Включити VPN", url=TELEGRAM_PARTNER_URL)]
+            [
+                InlineKeyboardButton(
+                    text="🛒 Перейти до акції",
+                    url=final_url
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    text="🌐 Відкрити сайт",
+                    url="https://znizhkyakciiua.netlify.app/"
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    text="🔐 Включити VPN",
+                    url="https://t.me/BuyVPN_Global_bot?start=_tgr_1lp79ZIwODli"
+                )
+            ]
         ]
     )
 
