@@ -25,7 +25,7 @@ MAX_NEW_PER_STORE = 5
 STATE_FILE = "seen_deals.json"
 DB_FILE = "clicks.db"
 
-SITE_URL = "https://znizhkyakciiua.netlify.app/"
+SITE_URL = "https://znizhkiakciiukraineua.netlify.app/"
 TELEGRAM_PARTNER_URL = "https://t.me/BuyVPN_Global_bot?start=_tgr_1lp79ZIwODli"
 
 GLOBAL_REDIRECT = ""
